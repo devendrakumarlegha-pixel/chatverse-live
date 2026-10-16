@@ -53,7 +53,7 @@ test("frontend and overlay JavaScript parse successfully", () => {
       if (file.endsWith(".js")) {
         scripts.push([path.basename(file), source]);
       } else {
-        const matches = source.matchAll(/<script>([\\s\\S]*?)<\\/script>/gi);
+        const matches = source.matchAll(/<script>([\s\S]*?)<\/script>/gi);
         for (const match of matches) scripts.push([path.basename(file) + "-inline-" + scripts.length, match[1]]);
       }
     }

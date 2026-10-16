@@ -88,6 +88,8 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
  const statusEl=document.getElementById('ytStatus');
  const leaderboardEl=document.getElementById('leaderboard');
  const validCommands=new Set(['!red','!blue','!build','!attack','!defend','!power','!forest','!castle','!chaos']);
+ const processedMessageIds=new Set();
+ const gameplayCooldown=new Map();
  const token=()=>localStorage.getItem('chatverse_session')||'';
  const headers=()=>token()?{Authorization:'Bearer '+token()}:{};
  async function refresh(){

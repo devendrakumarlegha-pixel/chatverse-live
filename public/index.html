@@ -106,7 +106,7 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
    catch(e){statusEl.textContent='Live chat connection failed: '+e.message;}
  });
  document.getElementById('ytDisconnect').addEventListener('click',async()=>{
-   try{await fetch('/api/disconnect',{method:'POST'});statusEl.textContent='Disconnected from live chat.';}catch(e){statusEl.textContent='Disconnect request failed.';}
+   try{await fetch('/api/disconnect',{method:'POST',headers:headers()});statusEl.textContent='Disconnected from live chat.';}catch(e){statusEl.textContent='Disconnect request failed.';}
  });
  try{
    const stream=new EventSource('/api/events');

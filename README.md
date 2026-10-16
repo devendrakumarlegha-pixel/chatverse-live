@@ -19,6 +19,8 @@ Enable YouTube Data API v3. In Google Auth Platform, keep Audience External/Test
 Scopes requested: `youtube.readonly` and `youtube.force-ssl`. Start an active livestream with chat enabled before clicking Find live chat.
 
 ## Important
+The shared leaderboard is now loaded from and saved to a JSON file. Set `LEADERBOARD_FILE` to choose its path (default: `data/leaderboard.json`). This only survives restarts when that path is on persistent storage. Render ephemeral filesystems can lose this data on restart or redeploy; attach a persistent disk and mount it, or use a managed database before relying on permanent scores. The file store is suitable only for a small single-instance prototype; concurrent instances need a shared database.
+
 This is a controlled-test prototype, not production-ready. It uses in-memory sessions/tokens, a single OAuth client, and basic SSE; restarts lose auth state. Before public use, implement encrypted persistent token storage, secure HttpOnly/SameSite sessions, CSRF protection, rate limiting, robust origin validation, and error/quota handling. GitHub Pages can host only the static frontend, not this Node backend; deploy the backend to a Node-capable host with HTTPS.
 
 ## OBS browser-source overlay

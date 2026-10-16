@@ -38,4 +38,63 @@ $('auto').addEventListener('click',()=>{autoOn=!autoOn;$('auto').textContent=aut
 function draw(){phase+=.012;ctx.clearRect(0,0,W,H);let grad=ctx.createLinearGradient(0,0,W,H);grad.addColorStop(0,'#0a1430');grad.addColorStop(.55,'#111b3a');grad.addColorStop(1,'#090d20');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);for(let i=0;i<75;i++){let x=(i*137)%W,y=(i*79)%H;ctx.fillStyle=`rgba(125,220,255,${.18+.25*Math.sin(phase*2+i)})`;ctx.fillRect(x,y,2,2)}ctx.strokeStyle='rgba(67,232,255,.14)';ctx.lineWidth=1;for(let i=0;i<15;i++){let y=300+i*i*1.1;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}for(let i=-12;i<=12;i++){ctx.beginPath();ctx.moveTo(W/2+i*40,260);ctx.lineTo(W/2+i*100,540);ctx.stroke()}let glow=ctx.createRadialGradient(480,260,12,480,260,190);glow.addColorStop(0,'rgba(67,232,255,.25)');glow.addColorStop(1,'rgba(67,232,255,0)');ctx.fillStyle=glow;ctx.fillRect(260,50,440,390);ctx.save();ctx.translate(480,260);ctx.rotate(phase*.6);ctx.strokeStyle='#43e8ff';ctx.lineWidth=3;ctx.shadowBlur=18;ctx.shadowColor='#43e8ff';ctx.beginPath();ctx.ellipse(0,0,105,65,0,0,Math.PI*2);ctx.stroke();ctx.rotate(-phase*1.4);ctx.strokeStyle='#ff4bc8';ctx.beginPath();ctx.ellipse(0,0,75,120,0,0,Math.PI*2);ctx.stroke();ctx.restore();ctx.shadowBlur=0;drawShip(270+Math.sin(phase*2)*8,260,'#ff526d',1);drawShip(690+Math.cos(phase*2)*8,260,'#4a8dff',-1);ctx.font='bold 19px system-ui';ctx.textAlign='center';ctx.fillStyle='#ff8195';ctx.fillText('RED SQUAD',270,365);ctx.fillStyle='#80b5ff';ctx.fillText('BLUE SQUAD',690,365);blocks.forEach(b=>{ctx.save();ctx.shadowBlur=12;ctx.shadowColor=b.c;ctx.fillStyle=b.c;if(b.tree){ctx.beginPath();ctx.moveTo(b.x,b.y-22);ctx.lineTo(b.x-13,b.y+2);ctx.lineTo(b.x+13,b.y+2);ctx.closePath();ctx.fill();ctx.fillRect(b.x-3,b.y+2,6,13)}else if(b.castle){ctx.fillRect(b.x-35,b.y-28,70,48);ctx.fillRect(b.x-43,b.y-40,16,60);ctx.fillRect(b.x+27,b.y-40,16,60);ctx.fillStyle='#fff';ctx.fillRect(b.x-5,b.y,10,20)}else ctx.fillRect(b.x-9,b.y-9,18,18);ctx.restore()});particles=particles.filter(p=>p.life>0);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life--;ctx.globalAlpha=Math.max(0,p.life/55);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.size,p.size)});ctx.globalAlpha=1;if(eventTimer>0){eventTimer--;ctx.fillStyle='rgba(5,10,25,.75)';ctx.fillRect(305,30,350,42);ctx.strokeStyle='#43e8ff';ctx.strokeRect(305,30,350,42);ctx.fillStyle='#e9fcff';ctx.font='bold 17px system-ui';ctx.textAlign='center';ctx.fillText($('eventTitle').textContent,480,57)}requestAnimationFrame(draw)}
 function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);ctx.shadowBlur=22;ctx.shadowColor=color;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(35,0);ctx.lineTo(-22,-22);ctx.lineTo(-12,0);ctx.lineTo(-22,22);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,5,0,Math.PI*2);ctx.fill();ctx.restore()}updateHUD();draw()})();
 </script>
+
+<section class="panel" id="ytPanel" style="margin-top:12px">
+<h2>📡 YOUTUBE LIVE CHAT</h2>
+<p class="hint" id="ytStatus">Status: Checking backend connection…</p>
+<div class="bottom">
+<button class="btn bluebtn" type="button" id="ytSignIn">1. Connect Google</button>
+<button class="btn" type="button" id="ytConnect">2. Connect Active Live Chat</button>
+<button class="btn" type="button" id="ytDisconnect">Disconnect</button>
+</div>
+<p class="hint">Requires the Node backend to be deployed and Google OAuth configured. Test with an active livestream whose chat is enabled.</p>
+</section>
+<script>
+(function(){
+ const statusEl=document.getElementById('ytStatus');
+ const token=()=>localStorage.getItem('chatverse_session')||'';
+ const headers=()=>token()?{Authorization:'Bearer '+token()}:{};
+ async function refresh(){
+   try{
+     const r=await fetch('/api/status'); const d=await r.json();
+     statusEl.textContent=d.connected?'Status: Connected to YouTube Live Chat ✓':(d.configured?'Status: Backend ready; not connected to live chat.':'Status: Backend reachable, but OAuth environment variables are missing.');
+   }catch(e){statusEl.textContent='Status: Backend not reachable from this URL. Deploy frontend and Node backend on the same origin, or configure an API base URL.';}
+ }
+ document.getElementById('ytSignIn').addEventListener('click',async()=>{
+   try{const r=await fetch('/api/auth/google');const d=await r.json();if(!r.ok)throw new Error(d.error||'OAuth endpoint unavailable');if(d.url)location.href=d.url;}
+   catch(e){statusEl.textContent='Sign-in unavailable: '+e.message;}
+ });
+ document.getElementById('ytConnect').addEventListener('click',async()=>{
+   if(!token()){statusEl.textContent='First tap Connect Google and complete authorization.';return;}
+   try{const r=await fetch('/api/find-live-chat',{method:'POST',headers:headers()});const d=await r.json();if(!r.ok)throw new Error(d.error||'Could not connect');statusEl.textContent='Connected to live chat: '+(d.title||'Active livestream');}
+   catch(e){statusEl.textContent='Live chat connection failed: '+e.message;}
+ });
+ document.getElementById('ytDisconnect').addEventListener('click',async()=>{
+   try{await fetch('/api/disconnect',{method:'POST'});statusEl.textContent='Disconnected from live chat.';}catch(e){statusEl.textContent='Disconnect request failed.';}
+ });
+ try{
+   const stream=new EventSource('/api/events');
+   stream.addEventListener('status',refresh);
+   stream.addEventListener('chat',e=>{
+     try{
+       const m=JSON.parse(e.data),cmd=(m.command||'').replace(/^!/,'');
+       if(['red','blue','build','attack','defend','power','forest','castle','chaos'].includes(cmd)) {
+         if(typeof window.chatverseCommand==='function')window.chatverseCommand(cmd);
+         else document.querySelector('[data-cmd="'+cmd+'"]')?.click();
+       }
+       const feed=document.getElementById('feed'),row=document.createElement('div');
+       const author=document.createElement('b');author.textContent=(m.author||'Viewer')+': ';
+       row.append(author,document.createTextNode(m.text||''));feed.prepend(row);
+       while(feed.children.length>8)feed.lastChild.remove();
+     }catch(_){}
+   });
+   stream.addEventListener('command',e=>{
+     try{const d=JSON.parse(e.data);statusEl.textContent='Last chat command: '+d.command+' by '+d.author;}catch(_){}
+   });
+   stream.onerror=()=>{statusEl.textContent='Live events stream disconnected; checking backend…';};
+ }catch(_){}
+ refresh();
+})();
+</script>
+
 </body></html>

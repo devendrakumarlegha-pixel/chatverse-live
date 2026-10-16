@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const os = require("node:os");
 const { spawnSync } = require("node:child_process");
 
 const root = path.join(__dirname, "..");
@@ -35,5 +36,35 @@ test("YouTube chat commands are allow-listed before awarding points", () => {
   assert.match(server, /function awardPoint\(author,command\)/);
   for (const command of ["!red", "!blue", "!build", "!attack", "!defend", "!power", "!forest", "!castle", "!chaos"]) {
     assert.ok(server.includes(JSON.stringify(command)), "Missing allow-listed command: " + command);
+  }
+});
+
+test("frontend and overlay JavaScript parse successfully", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "chatverse-syntax-"));
+  try {
+    const files = [
+      path.join(root, "public", "index.html"),
+      path.join(root, "public", "overlay.html"),
+      path.join(root, "public", "sounds.js")
+    ];
+    const scripts = [];
+    for (const file of files) {
+      const source = fs.readFileSync(file, "utf8");
+      if (file.endsWith(".js")) {
+        scripts.push([path.basename(file), source]);
+      } else {
+        const matches = source.matchAll(/<script>([\\s\\S]*?)<\\/script>/gi);
+        for (const match of matches) scripts.push([path.basename(file) + "-inline-" + scripts.length, match[1]]);
+      }
+    }
+    assert.ok(scripts.length >= 3, "Expected inline game/overlay scripts and sound module");
+    for (const [name, source] of scripts) {
+      const file = path.join(tempDir, name.replace(/[^a-z0-9_.-]/gi, "_") + ".js");
+      fs.writeFileSync(file, source, "utf8");
+      const result = spawnSync(process.execPath, ["--check", file], { encoding: "utf8" });
+      assert.equal(result.status, 0, name + ": " + (result.stderr || result.stdout));
+    }
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });

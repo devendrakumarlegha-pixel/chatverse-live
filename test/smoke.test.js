@@ -3,7 +3,8 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const os = require("node:os");
-const { spawnSync } = require("node:child_process");
+const { spawn, spawnSync } = require("node:child_process");
+const net = require("node:net");
 
 const root = path.join(__dirname, "..");
 const serverPath = path.join(root, "server", "index.js");
@@ -79,4 +80,57 @@ test("frontend uses shared leaderboard and authorizes disconnect", () => {
   assert.match(frontend, /stream\.addEventListener\('leaderboard'/);
   assert.match(frontend, /fetch\('\/api\/disconnect',\{method:'POST',headers:headers\(\)\}\)/);
   assert.doesNotMatch(frontend, /This prototype is not connected to YouTube Live Chat yet/);
+});
+
+test("server starts, serves health, and protects disconnect", async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "chatverse-runtime-"));
+  const probe = net.createServer();
+  await new Promise((resolve, reject) => {
+    probe.once("error", reject);
+    probe.listen(0, "127.0.0.1", resolve);
+  });
+  const port = probe.address().port;
+  await new Promise(resolve => probe.close(resolve));
+  const baseUrl = "http://127.0.0.1:" + port;
+  const child = spawn(process.execPath, [serverPath], {
+    env: {
+      ...process.env,
+      PORT: String(port),
+      BASE_URL: baseUrl,
+      GOOGLE_CLIENT_ID: "",
+      GOOGLE_CLIENT_SECRET: "",
+      SESSION_SECRET: "",
+      LEADERBOARD_FILE: path.join(tempDir, "scores.json")
+    },
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  let logs = "";
+  child.stdout.on("data", chunk => { logs += chunk.toString(); });
+  child.stderr.on("data", chunk => { logs += chunk.toString(); });
+  try {
+    let health = null;
+    for (let attempt = 0; attempt < 40; attempt++) {
+      if (child.exitCode !== null) throw new Error("Server exited early: " + logs);
+      try {
+        health = await fetch(baseUrl + "/health");
+        if (health.ok) break;
+      } catch (_) {}
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+    assert.ok(health && health.ok, "Health endpoint did not respond. " + logs);
+    assert.deepEqual(await health.json(), { ok: true, service: "chatverse-live" });
+    const status = await fetch(baseUrl + "/api/status");
+    assert.equal(status.status, 200);
+    assert.equal((await status.json()).configured, false);
+    const disconnect = await fetch(baseUrl + "/api/disconnect", { method: "POST" });
+    assert.equal(disconnect.status, 401);
+  } finally {
+    child.kill("SIGTERM");
+    await Promise.race([
+      new Promise(resolve => child.once("exit", resolve)),
+      new Promise(resolve => setTimeout(resolve, 1500))
+    ]);
+    if (child.exitCode === null) child.kill("SIGKILL");
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 });

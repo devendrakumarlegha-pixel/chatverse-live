@@ -8,10 +8,11 @@
 ## Run
 Requires Node.js 20+:
 1. `npm install`
-2. Copy `.env.example` to `.env`.
-3. Fill in OAuth values on the server only.
-4. `npm start`
-5. Open `http://localhost:3000`.
+2. Run `npm test` to execute syntax, frontend-script, persistence, security, and runtime smoke checks.
+3. Copy `.env.example` to `.env`.
+4. Fill in OAuth values on the server only.
+5. `npm start`
+6. Open `http://localhost:3000`.
 
 ## Google OAuth
 Enable YouTube Data API v3. In Google Auth Platform, keep Audience External/Testing and add the channel account as a test user. In the Web OAuth client, add this exact Authorized redirect URI for local tests: `http://localhost:3000/oauth2callback`. Configure the same URI in `GOOGLE_REDIRECT_URI`. Never put `GOOGLE_CLIENT_SECRET` in HTML or commit `.env`.

@@ -87,6 +87,8 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
  const statusEl=document.getElementById('ytStatus');
  const leaderboardEl=document.getElementById('leaderboard');
  const viewerScores=new Map();
+ const scoreStorageKey='chatverse_viewer_scores_v1';
+ try{const saved=JSON.parse(localStorage.getItem(scoreStorageKey)||'[]');if(Array.isArray(saved))saved.slice(0,100).forEach(row=>{if(row&&typeof row.name==='string'&&Number.isFinite(row.points))viewerScores.set(row.name,row.points);});}catch(_){}
  const recentAuthorCommands=new Map();
  const gameplayCooldown=new Map();
  const processedMessageIds=new Set();
@@ -100,6 +102,7 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
    recentAuthorCommands.set(key,now);
    viewerScores.set(author,(viewerScores.get(author)||0)+1);
    const sorted=[...viewerScores.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5);
+   try{localStorage.setItem(scoreStorageKey,JSON.stringify([...viewerScores.entries()].sort((a,b)=>b[1]-a[1]).slice(0,100).map(([name,points])=>({name,points}))));}catch(_){}
    leaderboardEl.replaceChildren();
    sorted.forEach(([name,points],i)=>{const row=document.createElement('div');row.textContent=['🥇','🥈','🥉','4.','5.'][i]+' '+name+' — '+points+' pts';leaderboardEl.appendChild(row);});
  }

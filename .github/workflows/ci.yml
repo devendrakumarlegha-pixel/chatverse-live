@@ -21,4 +21,4 @@ jobs:
       - name: Check backend syntax
         run: npm run check
       - name: Run smoke tests
-        run: node --test test/smoke.test.js
+        run: npm test

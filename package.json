@@ -5,7 +5,8 @@
   "description": "CHATVERSE LIVE browser game and YouTube chat bridge prototype",
   "scripts": {
     "start": "node server/index.js",
-    "check": "node --check server/index.js"
+    "check": "node --check server/index.js",
+    "test": "node --test test/smoke.test.js"
   },
   "engines": {
     "node": ">=20"

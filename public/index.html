@@ -72,6 +72,8 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
  const leaderboardEl=document.getElementById('leaderboard');
  const viewerScores=new Map();
  const recentAuthorCommands=new Map();
+ const gameplayCooldown=new Map();
+ const processedMessageIds=new Set();
  const validCommands=new Set(['!red','!blue','!build','!attack','!defend','!power','!forest','!castle','!chaos']);
  function updateLeaderboard(message){
    const author=String(message.author||'Viewer').trim().slice(0,80);
@@ -111,7 +113,12 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
    stream.addEventListener('chat',e=>{
      try{
        const m=JSON.parse(e.data);updateLeaderboard(m);const cmd=(m.command||'').replace(/^!/,'');
+       if(m.id){if(processedMessageIds.has(m.id))return;processedMessageIds.add(m.id);if(processedMessageIds.size>1000)processedMessageIds.clear();}
        if(['red','blue','build','attack','defend','power','forest','castle','chaos'].includes(cmd)) {
+         const authorKey=String(m.author||'Viewer').toLowerCase(),now=Date.now();
+         if(now-(gameplayCooldown.get(authorKey)||0)<2500)return;
+         gameplayCooldown.set(authorKey,now);
+         if(gameplayCooldown.size>500)gameplayCooldown.clear();
          if(typeof window.chatverseCommand==='function')window.chatverseCommand(cmd);
          else document.querySelector('[data-cmd="'+cmd+'"]')?.click();
        }

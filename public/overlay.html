@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CHATVERSE LIVE — OBS Overlay</title>
+<style>
+:root{color-scheme:dark;--cyan:#43e8ff;--pink:#ff4bc8;--red:#ff526d;--blue:#4a8dff;--white:#f4f8ff}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:transparent;color:var(--white);font-family:Arial,Helvetica,sans-serif;overflow:hidden}
+.overlay{width:min(100%,1000px);padding:18px;display:grid;gap:12px}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;border:1px solid #43e8ff88;border-radius:15px;background:linear-gradient(100deg,#071329ed,#151a36df);box-shadow:0 0 24px #00d9ff25}
+.logo{font-size:clamp(18px,3vw,30px);font-weight:900;letter-spacing:2px;text-shadow:0 0 14px #43e8ff55}.logo span{color:var(--cyan)}.live{font-size:12px;font-weight:800;letter-spacing:1px;color:#ff7187;white-space:nowrap}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff526d;margin-right:7px;box-shadow:0 0 12px #ff526d}
+.scores{display:grid;grid-template-columns:1fr 1fr;gap:12px}.team{border-radius:14px;padding:12px 16px;background:#09142bea;border:1px solid #ffffff22;box-shadow:0 8px 24px #0003}.team.red{border-color:#ff526d88}.team.blue{border-color:#4a8dff88}.label{font-size:12px;font-weight:800;letter-spacing:1.4px;opacity:.9}.count{font-size:clamp(26px,5vw,42px);font-weight:900;line-height:1.15;margin-top:3px}.red .count{color:var(--red)}.blue .count{color:var(--blue)}
+.activity{border:1px solid #43e8ff55;border-radius:14px;padding:12px 15px;background:#071329e8;min-height:96px}.activity-head{font-size:11px;font-weight:900;letter-spacing:1.8px;color:var(--cyan);margin-bottom:8px}.feed{display:grid;gap:6px}.item{font-size:clamp(13px,2vw,17px);display:flex;gap:8px;align-items:baseline;overflow-wrap:anywhere}.name{font-weight:800;color:#fff}.cmd{font-weight:900;color:var(--cyan)}.empty{font-size:14px;color:#b7c6df}.status{font-size:11px;color:#c3d4ef;text-align:right;padding-right:4px;text-shadow:0 1px 5px #000}.offline{color:#ffd37a}
+@media(max-width:520px){.overlay{padding:8px;gap:7px}.brand{padding:10px 12px}.team{padding:9px 12px}.activity{padding:10px 12px}}
+</style>
+</head>
+<body>
+<main class="overlay" aria-label="Chatverse live stream overlay">
+  <header class="brand"><div class="logo">CHAT<span>VERSE</span> LIVE</div><div class="live"><i class="dot"></i>LIVE BATTLE</div></header>
+  <section class="scores">
+    <div class="team red"><div class="label">🔴 RED SUPPORT</div><div class="count" id="red">0</div></div>
+    <div class="team blue"><div class="label">🔵 BLUE SUPPORT</div><div class="count" id="blue">0</div></div>
+  </section>
+  <section class="activity"><div class="activity-head">⚡ LIVE CHAT COMMANDS</div><div class="feed" id="feed"><div class="empty">Waiting for YouTube chat activity…</div></div></section>
+  <div class="status" id="status">Connecting to CHATVERSE server…</div>
+</main>
+<script>
+(()=> {
+  const $=id=>document.getElementById(id);
+  let red=0,blue=0,connected=false;
+  const allowed=new Set(['!red','!blue','!build','!attack','!defend','!power','!forest','!castle','!chaos']);
+  const labels={'!red':'🔴 supports RED','!blue':'🔵 supports BLUE','!build':'🧱 BUILD','!attack':'⚔️ ATTACK','!defend':'🛡️ DEFEND','!power':'✨ POWER-UP','!forest':'🌲 FOREST','!castle':'🏰 CASTLE','!chaos':'🤯 CHAOS EVENT'};
+  function add(item){
+    const feed=$('feed');
+    if(feed.querySelector('.empty'))feed.innerHTML='';
+    const row=document.createElement('div');row.className='item';
+    const name=document.createElement('span');name.className='name';name.textContent=(item.author||'Viewer')+':';
+    const cmd=document.createElement('span');cmd.className='cmd';cmd.textContent=labels[item.command]||item.text||item.command;
+    row.append(name,cmd);feed.prepend(row);
+    while(feed.children.length>3)feed.lastElementChild.remove();
+  }
+  function onCommand(data){
+    const command=String(data.command||'').toLowerCase();
+    if(!allowed.has(command))return;
+    if(command==='!red'){red++;$('red').textContent=red}
+    if(command==='!blue'){blue++;$('blue').textContent=blue}
+    add({...data,command});
+  }
+  function connect(){
+    const es=new EventSource('/api/events');
+    es.addEventListener('status',e=>{
+      try{const s=JSON.parse(e.data);connected=!!s.connected;$('status').textContent=connected?'YouTube Live Chat connected':'Waiting for live chat connection';$('status').classList.toggle('offline',!connected)}catch{}
+    });
+    es.addEventListener('command',e=>{try{onCommand(JSON.parse(e.data))}catch{}});
+    es.addEventListener('chat',e=>{
+      try{const m=JSON.parse(e.data);const c=String(m.command||'').toLowerCase();if(!allowed.has(c))return;}catch{}
+    });
+    es.onerror=()=>{$('status').textContent='Reconnecting to CHATVERSE server…';$('status').classList.add('offline')};
+  }
+  connect();
+})();
+</script>
+</body>
+</html>

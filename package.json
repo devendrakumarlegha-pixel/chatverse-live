@@ -1,0 +1,18 @@
+{
+  "name": "chatverse-live",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CHATVERSE LIVE browser game and YouTube chat bridge prototype",
+  "scripts": {
+    "start": "node server/index.js",
+    "check": "node --check server/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "googleapis": "^144.0.0"
+  }
+}

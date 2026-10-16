@@ -28,9 +28,9 @@ body.portrait-mode{background:radial-gradient(circle at 50% 0%,#17244b 0,#080d1d
 </div><p class="hint" id="battleHint">Battle is ready. Chat commands affect squad energy and health.</p>
 </section>
 <section class="hud"><div class="team red"><div class="team-row"><div class="team-name"><i class="orb"></i> RED SQUAD</div><div class="score" id="redScore">0</div></div><div class="bar"><div id="redBar"></div></div></div><div class="team blue"><div class="team-row"><div class="team-name"><i class="orb"></i> BLUE SQUAD</div><div class="score" id="blueScore">0</div></div><div class="bar"><div id="blueBar"></div></div></div></section>
-<div class="columns"><section class="panel"><h2>⚡ SEND A COMMAND <span class="pill">LOCAL DEMO</span></h2><div class="commands"><button class="btn redbtn" data-cmd="red">🔴 Support RED</button><button class="btn bluebtn" data-cmd="blue">🔵 Support BLUE</button><button class="btn" data-cmd="build">🧱 Build</button><button class="btn" data-cmd="attack">⚔️ Attack</button><button class="btn" data-cmd="defend">🛡️ Defend</button><button class="btn special" data-cmd="power">✨ Power-up</button><button class="btn" data-cmd="forest">🌲 Forest</button><button class="btn" data-cmd="castle">🏰 Castle</button><button class="btn special" data-cmd="chaos">🤯 Chaos Event</button></div><div class="hint">Tap buttons to simulate chat commands while testing. This prototype is not connected to YouTube Live Chat yet.</div></section>
+<div class="columns"><section class="panel"><h2>⚡ SEND A COMMAND <span class="pill">LOCAL DEMO</span></h2><div class="commands"><button class="btn redbtn" data-cmd="red">🔴 Support RED</button><button class="btn bluebtn" data-cmd="blue">🔵 Support BLUE</button><button class="btn" data-cmd="build">🧱 Build</button><button class="btn" data-cmd="attack">⚔️ Attack</button><button class="btn" data-cmd="defend">🛡️ Defend</button><button class="btn special" data-cmd="power">✨ Power-up</button><button class="btn" data-cmd="forest">🌲 Forest</button><button class="btn" data-cmd="castle">🏰 Castle</button><button class="btn special" data-cmd="chaos">🤯 Chaos Event</button></div><div class="hint">Tap buttons to test locally, or connect Google and an active YouTube Live Chat below to control the game.</div></section>
 <section class="panel"><h2>🌌 LIVE EVENT</h2><div class="event"><div class="event-title" id="eventTitle">NEON CORE ONLINE</div><div class="event-desc" id="eventDesc">Choose a command to change the arena.</div></div><h2>💬 ARENA FEED</h2><div class="feed" id="feed"><div>System: <b>Welcome to Chatverse.</b> Tap a command to begin.</div></div></section></div>
-<div class="bottom"><button class="btn" id="newRound">🔄 New Round</button><button class="btn" id="reset">↺ Reset Game</button><button class="btn special" id="auto">▶ Auto Demo: OFF</button><button class="btn" id="soundToggle" aria-pressed="true">🔊 Sound: ON</button></div><div class="status" id="status">Prototype v0.1 • Mobile-friendly • YouTube integration is the next stage</div>
+<div class="bottom"><button class="btn" id="newRound">🔄 New Round</button><button class="btn" id="reset">↺ Reset Game</button><button class="btn special" id="auto">▶ Auto Demo: OFF</button><button class="btn" id="soundToggle" aria-pressed="true">🔊 Sound: ON</button></div><div class="status" id="status">Mobile-friendly arena • YouTube Live Chat integration available below</div>
 </div>
 <script src="./sounds.js"></script>
 <script>
@@ -87,26 +87,7 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
 (function(){
  const statusEl=document.getElementById('ytStatus');
  const leaderboardEl=document.getElementById('leaderboard');
- const viewerScores=new Map();
- const scoreStorageKey='chatverse_viewer_scores_v1';
- try{const saved=JSON.parse(localStorage.getItem(scoreStorageKey)||'[]');if(Array.isArray(saved))saved.slice(0,100).forEach(row=>{if(row&&typeof row.name==='string'&&Number.isFinite(row.points))viewerScores.set(row.name,row.points);});}catch(_){}
- const recentAuthorCommands=new Map();
- const gameplayCooldown=new Map();
- const processedMessageIds=new Set();
  const validCommands=new Set(['!red','!blue','!build','!attack','!defend','!power','!forest','!castle','!chaos']);
- function updateLeaderboard(message){
-   const author=String(message.author||'Viewer').trim().slice(0,80);
-   const command=String(message.command||'').trim().toLowerCase().split(/\\s+/)[0];
-   if(!validCommands.has(command))return;
-   const now=Date.now(),key=author.toLowerCase();
-   if(now-(recentAuthorCommands.get(key)||0)<2500)return;
-   recentAuthorCommands.set(key,now);
-   viewerScores.set(author,(viewerScores.get(author)||0)+1);
-   const sorted=[...viewerScores.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5);
-   try{localStorage.setItem(scoreStorageKey,JSON.stringify([...viewerScores.entries()].sort((a,b)=>b[1]-a[1]).slice(0,100).map(([name,points])=>({name,points}))));}catch(_){}
-   leaderboardEl.replaceChildren();
-   sorted.forEach(([name,points],i)=>{const row=document.createElement('div');row.textContent=['🥇','🥈','🥉','4.','5.'][i]+' '+name+' — '+points+' pts';leaderboardEl.appendChild(row);});
- }
  const token=()=>localStorage.getItem('chatverse_session')||'';
  const headers=()=>token()?{Authorization:'Bearer '+token()}:{};
  async function refresh(){
@@ -133,7 +114,7 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
    stream.addEventListener('status',refresh);
    stream.addEventListener('chat',e=>{
      try{
-       const m=JSON.parse(e.data);updateLeaderboard(m);const cmd=(m.command||'').replace(/^!/,'');
+       const m=JSON.parse(e.data);const cmd=(m.command||'').replace(/^!/,'');
        if(m.id){if(processedMessageIds.has(m.id))return;processedMessageIds.add(m.id);if(processedMessageIds.size>1000)processedMessageIds.clear();}
        if(['red','blue','build','attack','defend','power','forest','castle','chaos'].includes(cmd)) {
          const authorKey=String(m.author||'Viewer').toLowerCase(),now=Date.now();

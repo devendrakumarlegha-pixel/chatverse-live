@@ -39,6 +39,11 @@ function draw(){phase+=.012;ctx.clearRect(0,0,W,H);let grad=ctx.createLinearGrad
 function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);ctx.shadowBlur=22;ctx.shadowColor=color;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(35,0);ctx.lineTo(-22,-22);ctx.lineTo(-12,0);ctx.lineTo(-22,22);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,5,0,Math.PI*2);ctx.fill();ctx.restore()}updateHUD();draw()})();
 </script>
 
+<section class="panel" id="leaderboardPanel" style="margin-top:12px">
+<h2>🏆 VIEWER LEADERBOARD</h2>
+<p class="hint">Live rankings update when viewers send valid game commands.</p>
+<div id="leaderboard" class="feed"><div class="hint">Waiting for viewer commands…</div></div>
+</section>
 <section class="panel" id="ytPanel" style="margin-top:12px">
 <h2>📡 YOUTUBE LIVE CHAT</h2>
 <p class="hint" id="ytStatus">Status: Checking backend connection…</p>
@@ -52,6 +57,22 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
 <script>
 (function(){
  const statusEl=document.getElementById('ytStatus');
+ const leaderboardEl=document.getElementById('leaderboard');
+ const viewerScores=new Map();
+ const recentAuthorCommands=new Map();
+ const validCommands=new Set(['!red','!blue','!build','!attack','!defend','!power','!forest','!castle','!chaos']);
+ function updateLeaderboard(message){
+   const author=String(message.author||'Viewer').trim().slice(0,80);
+   const command=String(message.command||'').trim().toLowerCase().split(/\\s+/)[0];
+   if(!validCommands.has(command))return;
+   const now=Date.now(),key=author.toLowerCase();
+   if(now-(recentAuthorCommands.get(key)||0)<2500)return;
+   recentAuthorCommands.set(key,now);
+   viewerScores.set(author,(viewerScores.get(author)||0)+1);
+   const sorted=[...viewerScores.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5);
+   leaderboardEl.replaceChildren();
+   sorted.forEach(([name,points],i)=>{const row=document.createElement('div');row.textContent=['🥇','🥈','🥉','4.','5.'][i]+' '+name+' — '+points+' pts';leaderboardEl.appendChild(row);});
+ }
  const token=()=>localStorage.getItem('chatverse_session')||'';
  const headers=()=>token()?{Authorization:'Bearer '+token()}:{};
  async function refresh(){
@@ -77,7 +98,7 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
    stream.addEventListener('status',refresh);
    stream.addEventListener('chat',e=>{
      try{
-       const m=JSON.parse(e.data),cmd=(m.command||'').replace(/^!/,'');
+       const m=JSON.parse(e.data);updateLeaderboard(m);const cmd=(m.command||'').replace(/^!/,'');
        if(['red','blue','build','attack','defend','power','forest','castle','chaos'].includes(cmd)) {
          if(typeof window.chatverseCommand==='function')window.chatverseCommand(cmd);
          else document.querySelector('[data-cmd="'+cmd+'"]')?.click();

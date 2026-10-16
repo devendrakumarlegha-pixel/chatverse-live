@@ -51,6 +51,22 @@ function draw(){phase+=.012;ctx.clearRect(0,0,W,H);let grad=ctx.createLinearGrad
 function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);ctx.shadowBlur=22;ctx.shadowColor=color;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(35,0);ctx.lineTo(-22,-22);ctx.lineTo(-12,0);ctx.lineTo(-22,22);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,5,0,Math.PI*2);ctx.fill();ctx.restore()}updateBattle();updateHUD();draw()})();
 </script>
 
+<section class="panel" id="howToPlay" style="margin-top:12px">
+<h2>🎮 HOW TO PLAY — VIEWER COMMANDS</h2>
+<p class="hint">Type one command in the active YouTube livestream chat. Include the exclamation mark.</p>
+<div class="commands">
+<div class="event"><div class="event-title">!red</div><div class="event-desc">Support the Red Squad</div></div>
+<div class="event"><div class="event-title">!blue</div><div class="event-desc">Support the Blue Squad</div></div>
+<div class="event"><div class="event-title">!attack</div><div class="event-desc">Launch a battle attack</div></div>
+<div class="event"><div class="event-title">!defend</div><div class="event-desc">Raise team defenses</div></div>
+<div class="event"><div class="event-title">!power</div><div class="event-desc">Trigger a power-up</div></div>
+<div class="event"><div class="event-title">!build</div><div class="event-desc">Build a world structure</div></div>
+<div class="event"><div class="event-title">!forest</div><div class="event-desc">Add a neon forest</div></div>
+<div class="event"><div class="event-title">!castle</div><div class="event-desc">Build a fortress</div></div>
+<div class="event"><div class="event-title">!chaos</div><div class="event-desc">Trigger a random event</div></div>
+</div>
+<p class="hint">Commands are processed when the channel's active live chat is connected. A short per-viewer cooldown helps limit spam.</p>
+</section>
 <section class="panel" id="leaderboardPanel" style="margin-top:12px">
 <h2>🏆 VIEWER LEADERBOARD</h2>
 <p class="hint">Live rankings update when viewers send valid game commands.</p>

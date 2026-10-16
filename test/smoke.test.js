@@ -8,6 +8,7 @@ const { spawnSync } = require("node:child_process");
 const root = path.join(__dirname, "..");
 const serverPath = path.join(root, "server", "index.js");
 const server = fs.readFileSync(serverPath, "utf8");
+const frontend = fs.readFileSync(path.join(root, "public", "index.html"), "utf8");
 const pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 
 test("server JavaScript parses successfully", () => {
@@ -67,4 +68,15 @@ test("frontend and overlay JavaScript parse successfully", () => {
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
+});
+
+test("disconnect endpoint requires a valid session", () => {
+  assert.match(server, /app\.post\("\/api\/disconnect",\(req,res\)=>\{if\(!session\(req\)\)/);
+  assert.match(server, /12\*60\*60\*1000/);
+});
+
+test("frontend uses shared leaderboard and authorizes disconnect", () => {
+  assert.match(frontend, /stream\.addEventListener\('leaderboard'/);
+  assert.match(frontend, /fetch\('\/api\/disconnect',\{method:'POST',headers:headers\(\)\}\)/);
+  assert.doesNotMatch(frontend, /This prototype is not connected to YouTube Live Chat yet/);
 });

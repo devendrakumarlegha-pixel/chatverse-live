@@ -20,3 +20,14 @@ Scopes requested: `youtube.readonly` and `youtube.force-ssl`. Start an active li
 
 ## Important
 This is a controlled-test prototype, not production-ready. It uses in-memory sessions/tokens, a single OAuth client, and basic SSE; restarts lose auth state. Before public use, implement encrypted persistent token storage, secure HttpOnly/SameSite sessions, CSRF protection, rate limiting, robust origin validation, and error/quota handling. GitHub Pages can host only the static frontend, not this Node backend; deploy the backend to a Node-capable host with HTTPS.
+
+## OBS browser-source overlay
+After deploying the latest commit to your Node host, add a **Browser Source** in OBS:
+- URL: `https://chatverse-live.onrender.com/public/overlay.html`
+- Width: `900`, Height: `500` (adjust to fit your scene)
+- Enable **Shutdown source when not visible** only if you want the overlay connection to stop while hidden; otherwise leave it off.
+- Keep the source background transparent. The overlay listens to the same-origin `/api/events` SSE stream and shows real chat commands. The red/blue numbers count received `!red` and `!blue` commands since the overlay page was opened; they are command counts, not the main game's score.
+- First connect Google and click **Connect Active Live Chat** in the game page. Then open the overlay URL in OBS.
+- Test with a real active YouTube livestream and Live Chat enabled.
+
+Overlay file: `public/overlay.html`. This remains a prototype and should not be treated as production-secure.

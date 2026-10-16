@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const crypto = require("crypto");
 const { google } = require("googleapis");
 const app = express();
@@ -16,8 +17,12 @@ const oauth = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 const sessions = new Map(), states = new Map(), seen = new Set(), clients = new Set();
 let activeChatId=null, nextPageToken=null, timer=null, lastPollAt=null, lastError=null, recent=[];
 const globalScores=new Map(), scoreCooldown=new Map();
+const scoresFilePath=process.env.LEADERBOARD_FILE||path.join(__dirname,"..","data","leaderboard.json");
+function loadScores(){try{const parsed=JSON.parse(fs.readFileSync(scoresFilePath,"utf8"));if(Array.isArray(parsed)){for(const row of parsed){if(row&&typeof row.name==="string"&&Number.isFinite(row.points)&&row.points>0)globalScores.set(row.name.slice(0,80),Math.floor(row.points));}}}catch(e){if(e.code!=="ENOENT")console.warn("Leaderboard load failed:",e.message);}}
+function saveScores(){try{fs.mkdirSync(path.dirname(scoresFilePath),{recursive:true});const tmp=scoresFilePath+".tmp";fs.writeFileSync(tmp,JSON.stringify(leaderboard(),null,2),"utf8");fs.renameSync(tmp,scoresFilePath);}catch(e){console.warn("Leaderboard save failed:",e.message);}}
+loadScores();
 function leaderboard(){return [...globalScores.entries()].map(([name,points])=>({name,points})).sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name)).slice(0,10);}
-function awardPoint(author,command){if(!["!red","!blue","!build","!attack","!defend","!power","!forest","!castle","!chaos"].includes(command))return;const key=String(author||"Viewer").toLowerCase(),now=Date.now();if(now-(scoreCooldown.get(key)||0)<2500)return;scoreCooldown.set(key,now);const name=String(author||"Viewer").slice(0,80);globalScores.set(name,(globalScores.get(name)||0)+1);if(scoreCooldown.size>2000)scoreCooldown.clear();emit("leaderboard",leaderboard());}
+function awardPoint(author,command){if(!["!red","!blue","!build","!attack","!defend","!power","!forest","!castle","!chaos"].includes(command))return;const key=String(author||"Viewer").toLowerCase(),now=Date.now();if(now-(scoreCooldown.get(key)||0)<2500)return;scoreCooldown.set(key,now);const name=String(author||"Viewer").slice(0,80);globalScores.set(name,(globalScores.get(name)||0)+1);saveScores();if(scoreCooldown.size>2000)scoreCooldown.clear();emit("leaderboard",leaderboard());}
 app.use((req,res,next)=>{const o=req.headers.origin;if(o && allowedOrigins.includes(o)){res.setHeader("Access-Control-Allow-Origin",o);res.setHeader("Vary","Origin");}res.setHeader("Access-Control-Allow-Methods","GET,POST,OPTIONS");res.setHeader("Access-Control-Allow-Headers","Content-Type,Authorization");if(req.method==="OPTIONS")return res.sendStatus(204);next();});
 app.use(express.static(path.join(__dirname,"..")));
 function session(req){const t=(req.headers.authorization||"").replace(/^Bearer\s+/i,"");return sessions.get(t)||null;}

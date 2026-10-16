@@ -129,6 +129,7 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
  });
  try{
    const stream=new EventSource('/api/events');
+   stream.addEventListener('leaderboard',e=>{try{const rows=JSON.parse(e.data);leaderboardEl.replaceChildren();rows.slice(0,5).forEach((entry,i)=>{const row=document.createElement('div');row.textContent=['🥇','🥈','🥉','4.','5.'][i]+' '+String(entry.name||'Viewer')+' — '+Number(entry.points||0)+' pts';leaderboardEl.appendChild(row);});}catch(_){}});
    stream.addEventListener('status',refresh);
    stream.addEventListener('chat',e=>{
      try{

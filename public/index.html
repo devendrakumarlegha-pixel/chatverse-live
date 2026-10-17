@@ -91,7 +91,7 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
 (function(){
  const statusEl=document.getElementById('ytStatus');
  const leaderboardEl=document.getElementById('leaderboard');
- const validCommands=new Set(['!india','!usa','!russia','!pakistan','!china','!japan','!uk','!brazil','!chaos']);
+ const validCommands=new Set(['!india','!usa','!russia','!pakistan','!china','!japan','!uk','!brazil','!philippines','!indonesia','!vietnam','!thailand','!southkorea','!northkorea','!canada','!mexico','!argentina','!france','!germany','!italy','!spain','!turkey','!saudiarabia','!uae','!egypt','!nigeria','!southafrica','!australia','!newzealand','!ukraine','!chaos']);
  const processedMessageIds=new Set();
  const gameplayCooldown=new Map();
  const token=()=>localStorage.getItem('chatverse_session')||'';
@@ -116,6 +116,7 @@ function drawShip(x,y,color,dir){ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
  });
  try{
    const stream=new EventSource('/api/events');
+   stream.addEventListener('countryScores',e=>{try{const scores=JSON.parse(e.data);for(const country of countries){if(Number.isFinite(scores[country.id]))countryScores[country.id]=scores[country.id];}renderCountries();}catch(_){}});
    stream.addEventListener('leaderboard',e=>{try{const rows=JSON.parse(e.data);leaderboardEl.replaceChildren();rows.slice(0,5).forEach((entry,i)=>{const row=document.createElement('div');row.textContent=['🥇','🥈','🥉','4.','5.'][i]+' '+String(entry.name||'Viewer')+' — '+Number(entry.points||0)+' pts';leaderboardEl.appendChild(row);});}catch(_){}});
    stream.addEventListener('status',refresh);
    stream.addEventListener('chat',e=>{

@@ -29,8 +29,8 @@
 (()=> {
   const $=id=>document.getElementById(id);
   let red=0,blue=0,connected=false;
-  const allowed=new Set(['!red','!blue','!build','!attack','!defend','!power','!forest','!castle','!chaos']);
-  const labels={'!red':'🔴 supports RED','!blue':'🔵 supports BLUE','!build':'🧱 BUILD','!attack':'⚔️ ATTACK','!defend':'🛡️ DEFEND','!power':'✨ POWER-UP','!forest':'🌲 FOREST','!castle':'🏰 CASTLE','!chaos':'🤯 CHAOS EVENT'};
+  const allowed=new Set(['!india','!usa','!russia','!pakistan','!china','!japan','!uk','!brazil','!chaos']);
+  const labels={'!india':'🇮🇳 supports INDIA','!usa':'🇺🇸 supports USA','!russia':'🇷🇺 supports RUSSIA','!pakistan':'🇵🇰 supports PAKISTAN','!china':'🇨🇳 supports CHINA','!japan':'🇯🇵 supports JAPAN','!uk':'🇬🇧 supports UK','!brazil':'🇧🇷 supports BRAZIL','!chaos':'🌍 WORLD EVENT'};
   function add(item){
     const feed=$('feed');
     if(feed.querySelector('.empty'))feed.innerHTML='';

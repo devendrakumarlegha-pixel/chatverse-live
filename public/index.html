@@ -22,12 +22,12 @@ body.portrait-mode{background:radial-gradient(circle at 50% 0%,#17244b 0,#080d1d
 @media(max-width:650px){.app{padding:10px}.columns{grid-template-columns:1fr}.commands{grid-template-columns:repeat(3,1fr)}.panel{padding:11px}.subtitle{font-size:12px}.arena-head{font-size:11px}.hud{gap:7px}.team{padding:10px}.score{font-size:21px}}
 
 #jumpToChat{display:inline-flex;align-items:center;justify-content:center}body.stream-mode #jumpToChat{display:none!important}
-</style>
+.top-controls{display:flex!important;position:relative;z-index:5}body.portrait-mode .top-controls{display:flex!important;flex-wrap:wrap!important}body.portrait-mode .top-controls .btn{display:inline-flex!important;min-height:42px}</style>
 </head>
 <body class="portrait-mode">
 <div class="app">
 <div class="top"><div class="brand">BOOST <span>YOUR COUNTRY</span> 🌍</div><div class="badge">PLAYABLE PROTOTYPE</div></div>
-<div class="bottom" style="margin:0 0 10px"><button class="btn special" id="portraitMode" type="button" aria-pressed="true">📱 Shorts Layout: ON</button><button class="btn bluebtn" id="streamMode" type="button" aria-pressed="false">📺 Stream View: OFF</button><button class="btn" id="jumpToChat" type="button">📡 YouTube Chat Setup</button><span class="hint" id="portraitHint" style="align-self:center">Stream View hides controls and keeps the game, scores and chat feed visible.</span></div>
+<div class="bottom top-controls" style="margin:0 0 10px"><button class="btn special" id="portraitMode" type="button" aria-pressed="true">📱 Shorts Layout: ON</button><button class="btn bluebtn" id="streamMode" type="button" aria-pressed="false">📺 Stream View: OFF</button><button class="btn" id="jumpToChat" type="button">📡 YouTube Chat Setup</button><span class="hint" id="portraitHint" style="align-self:center">Stream View hides controls and keeps the game, scores and chat feed visible.</span></div>
 <div class="subtitle">Your chat. Your country. Your world battle.</div>
 <section class="arena-wrap"><div class="arena-head"><span>WORLD FLAGS ARENA <span class="pill" id="roundPill">ROUND 01</span></span><span class="live-dot">● DEMO MODE</span></div><div class="arena"><canvas id="game" width="960" height="540" aria-label="Chatverse game arena"></canvas></div></section>
 
